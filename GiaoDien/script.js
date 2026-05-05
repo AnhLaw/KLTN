@@ -1,0 +1,409 @@
+// ==========================================
+// 1. CẤU HÌNH VÀ KHỞI TẠO FIREBASE
+// ==========================================
+const firebaseConfig = {
+    apiKey: "AIzaSyD_a8qTFbzvTc0Wd3SYgXnpDs_ixADG07Y",
+    authDomain: "kltn-c0a2e.firebaseapp.com",
+    databaseURL: "https://kltn-c0a2e-default-rtdb.firebaseio.com",
+    projectId: "kltn-c0a2e",
+    storageBucket: "kltn-c0a2e.firebasestorage.app",
+    messagingSenderId: "1055291403683",
+    appId: "1:1055291403683:web:117b212e946790e881be16",
+    measurementId: "G-XYHQWVW234"
+};
+
+// Khởi tạo Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ==========================================
+// 2. CÁC HÀM GỬI DỮ LIỆU LÊN FIREBASE
+// ==========================================
+function setCheDoFirebase(modeName) {
+    db.ref('RobotNow/CheDoHienTai').set(modeName).catch(console.error);
+}
+
+function setTrangThaiFirebase(trangThaiText) {
+    db.ref('RobotStatus/trangThai').set(trangThaiText).catch(console.error);
+}
+
+function setDiChuyenFirebase(diChuyenText) {
+    db.ref('RobotStatus/DiChuyen').set(diChuyenText).catch(console.error);
+}
+
+// ==========================================
+// 3. LOGIC GIAO DIỆN (UI) VÀ SỰ KIỆN BẤM NÚT
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const activityHome = document.getElementById('activity-home');
+    const activityControl = document.getElementById('activity-control');
+    const activityAuto = document.getElementById('activity-auto');
+    const statusTextElement = document.getElementById('hien-thi-trang-thai');
+    const toast = document.getElementById('toast');
+
+    const MAP_MAX_METERS = 30;
+
+    const robotMarker = document.getElementById('robot-marker');
+    const valX = document.getElementById('val-x');
+    const valY = document.getElementById('val-y');
+    const valTheta = document.getElementById('val-theta');
+    const mapContainer = document.getElementById('lidar-map-container');
+
+
+    //f11
+    const titleBtn = document.getElementById('fullscreen-toggle');
+
+    // ----------------------------------------------------------------
+    // HÀM CHUYÊN DÙNG ĐỂ ĐỔI CHỮ TRÊN MÀN HÌNH
+    // ----------------------------------------------------------------
+    function inChuLenManHinh(text) {
+        if (!statusTextElement) return;
+        statusTextElement.innerText = text;
+        statusTextElement.className = "text-green";
+    }
+
+    // ----------------------------------------------------------------
+    // LẮNG NGHE ĐỒNG THỜI 2 NHÁNH (CÁI NÀO CẬP NHẬT CUỐI SẼ HIỂN THỊ CÁI ĐÓ)
+    // ----------------------------------------------------------------
+    db.ref('RobotStatus/trangThai').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+            inChuLenManHinh(val); // Hễ nhánh trangThai đổi, in luôn lên màn hình
+        }
+    });
+
+    db.ref('RobotStatus/DiChuyen').on('value', (snapshot) => {
+        const val = snapshot.val();
+        // Chỉ in lên màn hình nếu là "Đang tiến" hoặc "Đang lùi". 
+        // Bỏ qua chữ "Dừng" để nó không xóa mất trạng thái "Đang đi nhận thuốc" nếu robot dừng lại giữa chừng.
+        if (val === "Đang tiến" || val === "Đang lùi") {
+            inChuLenManHinh(val);
+        }
+    });
+
+    // ----------------------------------------------------------------
+    // HÀM HIỂN THỊ TOAST NOTIFICATION
+    // ----------------------------------------------------------------
+    function showToast(message) {
+        if (!toast) return;
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ----------------------------------------------------------------
+    // XỬ LÝ KHI BẤM NÚT
+    // ----------------------------------------------------------------
+    function handleTaskClick(statusMsg, toastMsg) {
+        showToast(toastMsg);
+        setTrangThaiFirebase(statusMsg);
+    }
+
+    function handleMoveClick(moveMsg, toastMsg) {
+        showToast(toastMsg);
+        setDiChuyenFirebase(moveMsg);
+    }
+
+    //     // ==========================================
+    //     // Xử lý tọa độ
+    //     // ==========================================
+
+    //     function initLidarMap() {
+    //     // Đọc X
+    //     firebase.database().ref('ToaDo/X').on('value', (snapshot) => {
+    //         let x = snapshot.val();
+    //         if (x !== null) updateRobotPosition(x, null, null);
+    //     });
+
+    //     // Đọc Y
+    //     firebase.database().ref('ToaDo/Y').on('value', (snapshot) => {
+    //         let y = snapshot.val();
+    //         if (y !== null) updateRobotPosition(null, y, null);
+    //     });
+
+
+    // }
+
+    // // Biến lưu trữ tạm tọa độ hiện tại
+    // let currentX = 0;
+    // let currentY = 0;
+    // let currentTheta = 0;
+
+    // function updateRobotPosition(newX, newY, newTheta) {
+    //     if (newX !== null) currentX = parseFloat(newX);
+    //     if (newY !== null) currentY = parseFloat(newY);
+    //     if (newTheta !== null) currentTheta = parseFloat(newTheta);
+
+    //     // 1. Cập nhật số hiển thị
+    //     if(valX) valX.innerText = currentX.toFixed(2);
+    //     if(valY) valY.innerText = currentY.toFixed(2);
+    //     if(valTheta) valTheta.innerText = currentTheta.toFixed(1) + '°';
+
+    //     // 2. Chuyển đổi sang tọa độ Pixel
+    //     if (!mapContainer || !robotMarker) return;
+
+    //     const mapWidth = mapContainer.clientWidth;
+    //     const mapHeight = mapContainer.clientHeight;
+
+    //     // Tính tỉ lệ: 1 mét = bao nhiêu pixel
+    //     const pixelsPerMeter = mapWidth / MAP_MAX_METERS;
+
+    //     // Tính tọa độ Left (Trục X)
+    //     // Gốc 0 ở giữa (mapWidth / 2) -> cộng thêm khoảng x
+    //     let leftPx = (mapWidth / 2) + (currentX * pixelsPerMeter);
+
+    //     // Tính tọa độ Top (Trục Y)
+    //     // Gốc 0 ở giữa -> Y dương thì đi lên (trừ đi pixel), Y âm thì đi xuống (cộng thêm pixel)
+    //     let topPx = (mapHeight / 2) - (currentY * pixelsPerMeter);
+
+    //     // 3. Di chuyển khối Robot trên màn hình
+    //     robotMarker.style.left = `${leftPx}px`;
+    //     robotMarker.style.top = `${topPx}px`;
+
+    // }
+
+    // // Hàm tự động vẽ các con số lên trục toạ độ
+    // // Hàm tự động vẽ các con số lên trục toạ độ (Bản nâng cấp chống đè chữ)
+    // function drawAxisLabels() {
+    //     const labelsContainer = document.getElementById('axis-labels');
+    //     if (!labelsContainer) return;
+
+    //     // Xóa sạch các số cũ trước khi vẽ lại (tránh bị in đè 2 lần)
+    //     labelsContainer.innerHTML = ''; 
+
+    //     const maxMeters = MAP_MAX_METERS / 2; 
+
+    //     // Tính khoảng cách in số: Nếu trục dài hơn 10m thì 2m mới in một số cho đỡ chật
+    //     let step = MAP_MAX_METERS > 20 ? 2 : 1; 
+
+    //     // Vẽ số cho trục X (Ngang)
+    //     for (let i = -maxMeters; i <= maxMeters; i += step) {
+    //         if (i === 0) continue; // Không vẽ số 0
+    //         let spanX = document.createElement('span');
+    //         spanX.className = 'axis-label label-x';
+    //         spanX.innerText = i;
+
+    //         let percentLeft = ((i + maxMeters) / MAP_MAX_METERS) * 100;
+    //         spanX.style.left = `${percentLeft}%`;
+    //         labelsContainer.appendChild(spanX);
+    //     }
+
+    //     // Vẽ số cho trục Y (Dọc)
+    //     for (let i = -maxMeters; i <= maxMeters; i += step) {
+    //         if (i === 0) continue; 
+    //         let spanY = document.createElement('span');
+    //         spanY.className = 'axis-label label-y';
+    //         spanY.innerText = i;
+
+    //         let percentTop = ((maxMeters - i) / MAP_MAX_METERS) * 100;
+    //         spanY.style.top = `${percentTop}%`;
+    //         labelsContainer.appendChild(spanY);
+    //     }
+    // }
+
+    // // Chạy hàm vẽ số
+    // drawAxisLabels();
+
+    // // Khởi chạy khi load trang
+    // initLidarMap();
+
+    // ==========================================
+    // HỆ THỐNG LƯU TRỮ LỊCH SỬ THAO TÁC (LOCALSTORAGE)
+    // ==========================================
+
+    // // 1. Khởi tạo mảng lấy dữ liệu từ bộ nhớ trình duyệt (nếu chưa có thì tạo mảng rỗng)
+    // let actionHistory = JSON.parse(localStorage.getItem('robotActionLogs')) || [];
+
+    // // 2. Hàm load lại lịch sử cũ khi vừa mở/F5 trang web
+    // function loadActionHistory() {
+    //     const historyList = document.getElementById('action-history-list');
+    //     if (!historyList) return;
+
+    //     // Nếu mảng trống thì hiện chữ "Chưa có thao tác nào"
+    //     if (actionHistory.length === 0) {
+    //         historyList.innerHTML = '<li class="history-empty">Chưa có thao tác nào...</li>';
+    //         return;
+    //     }
+
+    //     // Xóa ruột cũ và in lại từ mảng đã lưu
+    //     historyList.innerHTML = ''; 
+
+    //     actionHistory.forEach(log => {
+    //         const listItem = document.createElement('li');
+    //         listItem.innerHTML = `<span class="log-time">[${log.time}]</span> <span class="log-action">Đã lệnh: <b>${log.action}</b></span>`;
+    //         historyList.appendChild(listItem);
+    //     });
+    // }
+
+    // 3. Hàm ghi nhận thao tác mới (Bản nâng cấp có cả NGÀY + GIỜ)
+    function logAction(tenThaoTac) {
+        // Lấy ngày và giờ hiện tại
+        const now = new Date();
+        const dateString = now.toLocaleDateString('vi-VN');
+        const timeString = now.toLocaleTimeString('vi-VN');
+        const dateTimeString = `${timeString} - ${dateString}`;
+
+        // Tạo dữ liệu để gửi
+        const newLog = {
+            time: dateTimeString,
+            action: tenThaoTac,
+            timestamp: Date.now() // Dùng để sắp xếp thứ tự
+        };
+
+        // Đẩy dữ liệu lên Firebase (Đường dẫn: Robot/History)
+        // Dùng push() để mỗi lần bấm nó tạo ra một ID duy nhất, không bị ghi đè
+        const historyRef = firebase.database().ref('Robot/History');
+        historyRef.push(newLog);
+    }
+
+    function listenToHistory() {
+        const historyList = document.getElementById('action-history-list');
+        if (!historyList) return;
+
+        const historyRef = firebase.database().ref('Robot/History');
+
+        // Lắng nghe sự thay đổi dữ liệu (Chỉ lấy 50 dòng mới nhất)
+        historyRef.limitToLast(50).on('value', (snapshot) => {
+            // Xóa sạch danh sách cũ trên màn hình để vẽ lại
+            historyList.innerHTML = '';
+
+            if (!snapshot.exists()) {
+                historyList.innerHTML = '<li class="history-empty">Chưa có thao tác nào...</li>';
+                return;
+            }
+
+            const data = snapshot.val();
+            // Chuyển object Firebase thành mảng và sắp xếp ngược lại (mới nhất lên đầu)
+            const logs = Object.values(data).reverse();
+
+            logs.forEach(log => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<span class="log-time">[${log.time}]</span> <span class="log-action">Đã lệnh: <b>${log.action}</b></span>`;
+                historyList.appendChild(listItem);
+            });
+        });
+    }
+
+
+    // Sự kiện bấm nút Xóa lịch sử
+    document.getElementById('btn-clear-history') ?.addEventListener('click', () => {
+        // Hiện bảng hỏi lại cho chắc chắn, nhỡ bấm nhầm
+        if (confirm("Bạn có chắc chắn muốn xóa sạch toàn bộ lịch sử thao tác không?")) {
+            // Gửi lệnh xóa thẳng node History trên Firebase
+            firebase.database().ref('Robot/History').remove()
+                .then(() => {
+                    // Xóa thành công thì thông báo nhẹ một cái
+                    console.log("Đã xóa lịch sử thành công!");
+                })
+                .catch((error) => {
+                    alert("Lỗi khi xóa lịch sử: " + error);
+                });
+        }
+    });
+
+    listenToHistory();
+
+
+    // ==========================================
+    // GÁN SỰ KIỆN CHO CÁC NÚT BẤM
+    // ==========================================
+
+    document.getElementById('btn-manual') ?.addEventListener('click', () => {
+        if (activityHome && activityControl) {
+            activityHome.classList.add('hidden');
+            activityControl.classList.remove('hidden');
+        }
+        setCheDoFirebase('Manual');
+        setTrangThaiFirebase("Sẵn sàng");
+    });
+
+    document.getElementById('btn-auto') ?.addEventListener('click', () => {
+        if (activityHome && activityAuto) {
+            activityHome.classList.add('hidden');
+            activityAuto.classList.remove('hidden');
+        }
+        setCheDoFirebase('Auto');
+        setTrangThaiFirebase("Chế độ Tự động");
+        setDiChuyenFirebase("Dừng"); // Xóa lệnh di chuyển nếu có
+    });
+
+    document.getElementById('btn-chatbot') ?.addEventListener('click', () => {
+        setCheDoFirebase('ChatBot');
+        window.location.href = 'https://pasteur-ai.onrender.com/app';
+
+    });
+
+    document.getElementById('btn-nhan-thuoc') ?.addEventListener('click', () => {
+        handleTaskClick("Đang đi nhận thuốc", "Robot bắt đầu đi nhận thuốc...");
+        logAction('Nhận Thuốc');
+    });
+    document.getElementById('btn-phat-thuoc') ?.addEventListener('click', () => {
+        handleTaskClick("Đang đi phát thuốc", "Robot bắt đầu đi phát thuốc...");
+        logAction('Phát Thuốc');
+    });
+    document.getElementById('btn-ve-nha') ?.addEventListener('click', () => {
+        handleTaskClick("Đang về trạm sạc", "Robot quay về trạm sạc...");
+        logAction('Về trạm sạc');
+    });
+    document.getElementById('btn-tien') ?.addEventListener('click', () => {
+        handleMoveClick("Đang tiến", "Robot đang tiến 50cm!");
+        logAction('Tiến 50cm');
+    });
+    document.getElementById('btn-lui') ?.addEventListener('click', () => {
+        handleMoveClick("Đang lùi", "Robot đang lùi 50cm!");
+        logAction('Lùi 50cm');
+    });
+    document.getElementById('btn-home') ?.addEventListener('click', () => {
+        showToast("Đã trở về màn hình chính!");
+        if (activityControl && activityHome) {
+            activityControl.classList.add('hidden');
+            activityHome.classList.remove('hidden');
+        }
+        setCheDoFirebase('Home');
+        setDiChuyenFirebase("Dừng");
+        setTrangThaiFirebase("Sẵn sàng");
+    });
+// prettier-ignore
+    document.getElementById('btn-home-auto') ?.addEventListener('click', () => {
+        showToast("Đã trở về màn hình chính!");
+        // Ẩn Auto, Hiện Home
+        if (activityAuto && activityHome) {
+            activityAuto.classList.add('hidden');
+            activityHome.classList.remove('hidden');
+        }
+        // Đẩy lên Firebase
+        setCheDoFirebase('Home');
+        setDiChuyenFirebase("Về home");
+        setTrangThaiFirebase("Sẵn sàng");
+    });
+
+
+
+    titleBtn.addEventListener('click', function() {
+        if (!document.fullscreenElement) {
+            // Lệnh mở toàn màn hình
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        } else {
+            // Lệnh thoát toàn màn hình
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { /* Safari */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE11 */
+                document.msExitFullscreen();
+            }
+        }
+    });
+
+
+
+
+
+});

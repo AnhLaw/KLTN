@@ -1,0 +1,714 @@
+/* ==========================================
+   1. RESET & GIAO DIỆN MẶC ĐỊNH CHO LAPTOP
+========================================== */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    /* Dùng 100dvh để xử lý lỗi thanh địa chỉ trên trình duyệt di động */
+    min-height: 100dvh; 
+    background-color: #ffffff !important; /* Trả lại màu nền trắng toàn màn hình */
+    overflow-x: hidden; /* Khóa trượt ngang */
+    
+    /* Trên Laptop giữ nguyên kích thước gốc (100%) hoặc có thể chỉnh 90% nếu thấy to */
+    font-size: 100%; 
+}
+
+/* ==========================================
+   2. KHUNG CHỨA APP CHÍNH
+========================================== */
+#app-container {
+    width: 100%;
+    height: 100%;
+    max-width: 100%; /* Cho phép bung tràn 100% màn hình Laptop */
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================
+   3. TỰ ĐỘNG THU NHỎ THEO TỶ LỆ MÀN HÌNH
+========================================== */
+
+/* Màn hình Tablet (iPad) hoặc Laptop nhỏ */
+@media screen and (max-width: 1024px) {
+    html, body {
+        font-size: 70%; /* Thu nhỏ mọi thứ đi 30% */
+    }
+}
+
+/* Màn hình Điện thoại */
+@media screen and (max-width: 768px) {
+    html, body {
+        font-size: 55%; /* Thu nhỏ mọi thứ đi gần một nửa (45%) để vừa màn hình điện thoại */
+    }
+    
+    /* Tinh chỉnh riêng cho màn hình Auto trên điện thoại khỏi bị tràn */
+    .auto-message-box {
+        padding: 30px 15px; /* Giảm padding */
+        width: 95%; /* Trải rộng hộp thông báo ra sát viền đt */
+    }
+
+    #btn-home-auto {
+        width: 90%; /* Kéo dài nút Home cho dễ bấm */
+    }
+}
+
+
+:root {
+    --primary-blue: #1551a3;
+    --bg-gray: #f4f7f6;
+    --text-dark: #1a4175;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    /* Base font cho màn ngang 8 inch */
+    font-size: 18px; 
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #000; /* Nền đen ngoài viền nếu thiết bị dư tỷ lệ */
+    width: 100%; 
+    height: 100%;
+    overflow-x: hidden; /* Tuyệt đối không cho web trượt sang ngang */
+}
+
+.container {
+    width: 100%; /* Trải dài full màn hình */
+    height: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Quản lý Activity */
+.activity {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: calc(100vh - 50px); /* Trừ đi height của header */
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Header */
+.header {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 10px 20px;
+    font-size: 1.3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    height: 50px;
+}
+.text-green-light { color: #4caf50; }
+
+/* === STYLE CHO MÀN HÌNH HOME (Dàn đều theo chiều dọc) === */
+.home-content {
+    text-align: center;
+    padding: 10px 20px;
+    color: #333;
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: column;
+    justify-content: space-evenly; /* Chia đều không gian để không bị chật */
+}
+
+.home-content h3 {
+    margin: 5px 0;
+    font-size: 1.4rem; 
+}
+
+.uneti-logo {
+    width: 350px; 
+    height: auto;
+    cursor: pointer;
+}
+
+.topic-title {
+    color: var(--primary-blue);
+    font-size: 1.6rem !important; 
+    margin-top: 10px !important;
+}
+
+/* Container bọc ngoài: Bật chế độ Grid và chia đúng 3 cột bằng nhau (1fr 1fr 1fr) */
+/* Container bọc ngoài: Vẫn chia 3 cột bằng nhau */
+.mode-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    width: 100%; 
+    align-items: center;
+    margin-top: 10px;
+    transform: scale(0.8); 
+    transform-origin: center; /* Giảm bớt margin để nhường chỗ cho nút to */
+}
+
+/* Từng ô nút bấm bên trong: Nằm giữa khung 1/3 */
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 10px; /* Thêm một chút padding để nút không chạm sát viền ô */
+}
+
+.mode-btn:hover { 
+    transform: scale(1.05); 
+}
+
+.mode-btn img {
+    width: 260px; 
+    height: 260px;
+    object-fit: contain; 
+}
+
+.mode-btn p {
+    color: var(--primary-blue);
+    font-weight: bold;
+    /* Giảm margin-top một chút để chữ gần ảnh hơn, cân đối tổng thể (Cũ là 15px) */
+    margin-top: 10px; 
+    /* Cỡ chữ: Tăng từ 1.6rem lên 3.2rem (Gấp đôi) */
+    font-size: 3.2rem; 
+    /* Đảm bảo chữ dài không bị xuống dòng lộn xộn */
+    white-space: nowrap; 
+}
+
+/* === STYLE CHO MÀN HÌNH ĐIỀU KHIỂN === */
+.section { 
+    padding: 12px 20px; /* Tăng khoảng đệm các khu vực */
+}
+
+.section-title {
+    color: var(--primary-blue);
+    font-size: 1.8rem; /* Cũ 1.2rem -> Tăng gấp rưỡi */
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+/* Row 1: Buttons (Nhận Thuốc, Phát Thuốc, Về Nhà) */
+.control-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px; /* Tăng khoảng cách giữa các nút to lên một chút */
+}
+
+.btn {
+    background-color: var(--primary-blue);
+    color: white;
+    border: none;
+    /* Tăng độ dày nút lên gấp rưỡi (Cũ: 22px -> Mới: 35px) */
+    padding: 35px 10px; 
+    /* Tăng cỡ chữ lên gấp rưỡi (Cũ: 1.8rem -> Mới: 2.7rem) */
+    font-size: 2.7rem; 
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px; /* Tách chữ và icon xa ra tí cho thoáng */
+}
+
+/* Cho các icon (emoji/hình ảnh) trong nút trên to theo */
+.btn img, .btn span {
+    font-size: 3rem; 
+}
+
+.btn:active { opacity: 0.8; }
+.red-icon { color: #ff4d4d; }
+.orange-icon { color: #ffcc00; }
+
+/* Row 2: Status (Phần trạng thái đã được phóng to hết cỡ) */
+.status-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+}
+
+.status-info p, .progress-info p {
+    font-size: 2.2rem; /* Chữ "Trạng thái:" và "Tiến độ:" to hẳn lên (Cũ 1.6rem) */
+    margin: 10px 0;
+}
+
+.text-green { 
+    color: green; 
+    font-weight: bold; 
+    font-size: 2.4rem; /* Chữ "Sẵn sàng" màu xanh to và nhấn mạnh hơn */
+}
+
+.text-dark { 
+    color: #333; 
+    font-weight: bold; 
+    font-size: 2.4rem; /* Các chữ trạng thái khác (như Đi nhận thuốc...) cũng to lên */
+}
+
+.progress-bar-bg {
+    width: 450px; 
+    height: 12px; /* Cho thanh tiến độ dày hẳn lên (Cũ 8px) cho hợp với chữ to */
+    background: #ddd;
+    margin-top: 10px;
+}
+
+/* Row 3: Map (TỰ ĐỘNG CO GIÃN THEO CHIỀU CAO CÒN LẠI) */
+#activity-control .section:nth-of-type(3) {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    min-height: 0; 
+}
+
+.lidar-map {
+    background-color: #f0f0f0;
+    flex-grow: 1; 
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80px; /* Rút bớt min-height để nhường chỗ cho nút */
+}
+
+.robot-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 2.2rem; /* Mũi tên định hướng to lên */
+}
+
+.robot-square {
+    width: 50px; /* Khối vuông robot to gấp rưỡi (Cũ 35px) */
+    height: 50px;
+    background-color: var(--primary-blue);
+}
+
+.coordinates {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0 6px 0;
+    text-align: left;
+    font-size: 1.6rem; /* Chữ tọa độ to lên (Cũ 1.1rem) */
+}
+
+.val-blue, .val-black { font-weight: bold; font-size: 1.8rem; } /* Giá trị tọa độ to rõ */
+.val-blue { color: #1a4175; }
+.val-black { color: #333; }
+
+.lidar-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5rem; /* Cũ 1rem -> Tăng 1.5rem */
+    color: #666;
+}
+
+.job-list-empty { border-top: 1px solid #eee; height: 35px; }
+
+/* Row 4: Footer Nav (Tiến, Lùi, Home) */
+.footer-nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background-color: #ddd;
+    margin-top: auto;
+}
+
+.nav-btn {
+    background-color: var(--primary-blue);
+    color: white;
+    border: none;
+    /* Tăng độ dày nút dưới cùng (Cũ: 25px -> Mới: 40px) */
+    padding: 40px 10px; 
+    /* Tăng cỡ chữ siêu to khổng lồ (Cũ: 2.0rem -> Mới: 3.0rem) */
+    font-size: 3rem; 
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.nav-btn:active { opacity: 0.8; }
+
+
+/* Toast Notification */
+.toast {
+    visibility: hidden;
+    min-width: 400px;
+    background-color: rgba(60, 60, 60, 0.95); 
+    color: #fff;
+    text-align: center;
+    border-radius: 40px;
+    padding: 20px 35px; 
+    position: absolute;
+    z-index: 10;
+    bottom: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+    font-size: 1.8rem; /* Chữ thông báo to đùng dễ đọc */
+    font-weight: bold;
+}
+
+.toast.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+
+/* ==========================================
+   GIAO DIỆN MÀN HÌNH AUTO
+========================================== */
+#activity-auto {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1; /* Phép màu ở đây: Lệnh này ép màn hình auto tự động giãn xuống lấp đầy mọi khoảng trống còn lại */
+    width: 100%;
+    background-color: #ffffff; /* Trải nền trắng cho an toàn */
+}
+
+.auto-content {
+    flex-grow: 1;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.auto-message-box {
+    background: #ffffff;
+    padding: 60px 40px; /* Tăng khoảng cách cho hộp to ra để cân với chữ */
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 2px solid #3498db;
+    max-width: 90%;
+    animation: pulseBorder 2s infinite; 
+}
+
+.auto-title {
+    font-size: 4rem; /* Đã nhân đôi từ 1.5rem lên 3rem */
+    color: #e74c3c; 
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.auto-subtitle {
+    font-size: 2.2rem; /* Đã nhân đôi từ 1.1rem lên 2.2rem */
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+/* Đưa nút Home ra chính giữa */
+.single-btn-footer {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100%;
+    background-color: #f1f1f1; /* Nền mờ cho khu vực footer (có thể bỏ nếu không cần) */
+}
+
+/* Chỉnh kích thước nút Home cho gọn gàng ở giữa */
+#btn-home-auto {
+    width: 100%;
+    margin: 0 auto; /* Đẩy cân giữa hoàn toàn */
+}
+
+@keyframes pulseBorder {
+    0% { border-color: #3498db; }
+    50% { border-color: #e74c3c; }
+    100% { border-color: #3498db; }
+}
+
+/* ==========================================
+   TỰ ĐỘNG CĂN CHỈNH CHO MÀN HÌNH ĐIỆN THOẠI
+========================================== */
+@media screen and (max-width: 768px) {
+    /* Thu nhỏ chữ ở màn hình Auto */
+    .auto-title {
+        font-size: 1.8rem; 
+    }
+    .auto-subtitle {
+        font-size: 1.2rem;
+    }
+    
+    /* Thu nhỏ icon Robot */
+    .auto-message-box i {
+        font-size: 5rem !important;
+    }
+
+    /* Đảm bảo hộp thông báo không sát viền đt */
+    .auto-message-box {
+        padding: 30px 20px;
+        width: 90%;
+    }
+
+    /* Kéo dài nút Home ra cho dễ bấm bằng ngón tay */
+    #btn-home-auto {
+        width: 90%;
+    }
+}
+
+
+
+/* /* ==========================================
+   BẢNG HIỂN THỊ TỌA ĐỘ LIDAR
+========================================== */
+.lidar-panel {
+    position: absolute; 
+    top: 60px; /* Cách thanh header ở trên cùng một chút */
+    right: 20px; /* Gắn vào góc trên bên phải */
+    background: rgba(44, 62, 80, 0.8); /* Nền xám đen hơi trong suốt */
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: flex;
+    gap: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border: 1px solid #3498db;
+    z-index: 100; /* Đảm bảo nó luôn nổi lên trên cùng */
+}
+
+.coord-box {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-family: 'Courier New', Courier, monospace; /* Dùng font monospace cho số để nó không bị giật khi thay đổi */
+}
+
+.coord-label {
+    color: #f1c40f; /* Chữ X, Y màu vàng cho nổi */
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+/* Thu nhỏ panel trên điện thoại */
+@media screen and (max-width: 768px) {
+    .lidar-panel {
+        top: 50px;
+        right: 10px;
+        padding: 8px 15px;
+        gap: 15px;
+    }
+    .coord-box {
+        font-size: 1.2rem;
+    }
+} */ */
+
+/* ==========================================
+   BẢN ĐỒ TỌA ĐỘ 2D LIDAR
+========================================== */
+.lidar-map-wrapper {
+    width: 95%;
+    max-width: 800px; /* Phép màu ở đây: Giới hạn độ rộng tối đa để nó không bị bè ra trên laptop */
+    margin: 20px auto; /* Tự động căn giữa màn hình */
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.lidar-header {
+    padding: 10px 15px;
+    background: #f1f1f1;
+    color: #1565c0;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Khung màn hình hiển thị */
+#lidar-map-container {
+    position: relative;
+    width: 100%;
+    height: 450px; /* Tăng chiều cao lên cho sa bàn có không gian vuông vức hơn */
+    background: #e9ecef;
+    overflow: hidden;
+}
+
+/* Vẽ trục X và Y */
+.axis-x {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: #adb5bd;
+}
+
+.axis-y {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    background: #adb5bd;
+}
+
+/* Chấm tròn Robot */
+#robot-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;  /* Cho kích thước nhỏ lại một chút cho tinh tế */
+    height: 18px;
+    background-color: #1565c0; /* Màu xanh */
+    border-radius: 50%; /* Phép màu biến hình vuông thành hình tròn là ở dòng này */
+    box-shadow: 0 0 8px rgba(21, 101, 192, 0.6); /* Đổ chút bóng cho nó phát sáng nhẹ */
+    transform: translate(-50%, -50%); 
+    transition: top 0.2s linear, left 0.2s linear; /* Cắt bỏ hiệu ứng rotate vì hình tròn không cần xoay */
+    z-index: 10;
+}
+
+/* Định dạng các số trên trục tọa độ */
+.axis-label {
+    position: absolute;
+    font-size: 12px; /* Tăng cỡ chữ lên tí cho dễ nhìn */
+    font-weight: bold;
+    color: #495057;
+    font-family: Arial, sans-serif;
+    z-index: 5;
+}
+
+.label-x {
+    top: 50%; 
+    margin-top: 5px; 
+    transform: translateX(-50%); /* Căn giữa theo chiều ngang */
+}
+
+.label-y {
+    left: 50%; 
+    margin-left: 8px; 
+    transform: translateY(-50%); /* Căn giữa theo chiều dọc */
+}
+
+/* Thanh hiển thị thông số ở dưới */
+.lidar-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    font-size: 1.1rem;
+    background: #ffffff;
+}
+
+.lidar-stat {
+    display: flex;
+    flex-direction: column;
+}
+.lidar-stat .text-blue {
+    color: #1565c0;
+}
+
+/* ==========================================
+   LỊCH SỬ THAO TÁC (LOG HISTORY) - BẢN PHÓNG TO
+========================================== */
+.task-list-section h3 {
+    font-size: 2rem; /* Phóng to luôn cái tiêu đề "Danh Sách Công Việc" */
+    margin-bottom: 15px;
+}
+
+.history-container {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px; /* Tăng lề bên trong khung */
+    height: 450px; /* Kéo dài khung này ra để lấp đầy khoảng trắng trên màn hình */
+    overflow-y: auto; 
+    margin-top: 15px;
+}
+
+#action-history-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Phóng to từng dòng lịch sử */
+#action-history-list li {
+    padding: 16px 0; /* Gấp đôi khoảng cách trên/dưới của mỗi dòng (cũ là 8px) */
+    border-bottom: 1px dashed #ced4da;
+    font-size: 2rem; /* Phóng to chữ gần gấp đôi (cũ là 0.95rem) */
+    color: #495057;
+}
+
+#action-history-list li:last-child {
+    border-bottom: none;
+}
+
+.log-time {
+    color: #e67e22; 
+    font-family: monospace;
+    font-weight: bold;
+    margin-right: 16px; /* Gấp đôi khoảng cách giữa giờ và chữ */
+}
+
+.log-action b {
+    color: #1565c0; 
+}
+
+/* Dòng chữ khi chưa có thao tác nào */
+.history-empty {
+    text-align: center;
+    color: #adb5bd !important;
+    font-style: italic;
+    border: none !important;
+    font-size: 1.6rem !important; /* Phóng to chữ này luôn */
+    padding: 40px 0 !important;
+}
+
+/* Khung chứa tiêu đề và nút xóa */
+.history-header {
+    display: flex;
+    justify-content: space-between; /* Đẩy 2 phần tử ra 2 góc */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    margin-bottom: 15px;
+}
+
+.history-header h3 {
+    margin-bottom: 0; /* Bỏ margin cũ của h3 để không bị lệch */
+}
+
+/* Nút xóa lịch sử */
+.btn-clear {
+    background-color: #dc3545; /* Màu đỏ cảnh báo */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 1.4rem; /* Kích thước chữ to vừa phải */
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-clear:hover {
+    background-color: #c82333;
+}
+
+.btn-clear:active {
+    transform: scale(0.95); 
+}
+
+
+
+/* f11 */
+#fullscreen-toggle {
+    cursor: pointer; /* Hiện hình bàn tay khi di chuột vào */
+    user-select: none; /* Ngăn chặn việc bôi đen chữ khi lỡ chạm/click đúp (rất quan trọng cho màn hình cảm ứng) */
+    transition: opacity 0.2s; /* Hiệu ứng mờ nhẹ */
+}
+
+/* Phản hồi bằng mắt khi chạm vào */
+#fullscreen-toggle:active {
+    opacity: 0.6;
+}

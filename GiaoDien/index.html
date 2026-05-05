@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Y Tế Control Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app-container">
+    <div class="container">
+        <header class="header">
+            <div class="logo">🤖 Robot Y Tế</div>
+        </header>
+
+        <div id="activity-home" class="activity ">
+            <div class="home-content">
+                <h1>Trường Đại Học Kinh Tế - Kỹ Thuật Công Nghiệp <br>Khoa Điện tử và Kỹ thuật Máy tính</h1>
+                <div onclick="triggerRobotApp()" class="uneti-logo-container">
+                    <img src="image/logoU.png" alt="UNETI" class="uneti-logo">
+                </div>
+                <h2 class="topic-title" id="fullscreen-toggle">Khóa Luận Tốt Nghiệp Sinh Viên<br>Mảng đề tài:<br>Nghiên Cứu Thiết Kế Chế Tạo Robot Y Tế</h2>
+
+                <div class="mode-buttons">
+                    <div class="mode-btn" id="btn-manual">
+                        <img src="image/manual.png" alt="Manual">
+                        <p>Chế độ Manual</p>
+                    </div>
+                    <div class="mode-btn" id="btn-auto">
+                        <img src="image/auto.png" alt="Auto">
+                        <p>Chế độ Auto</p>
+                    </div>
+                    <div class="mode-btn" id="btn-chatbot">
+                        <img src="image/chat.png" alt="Chat Bot">
+                        <p>Chat Bot</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="activity-control" class="activity hidden">
+            <section class="section">
+                <h2 class="section-title">Điều Khiển</h2>
+                <div class="control-grid">
+                    <button class="btn btn-blue" id="btn-nhan-thuoc">💊Nhận Thuốc</button>
+                    <button class="btn btn-blue" id="btn-phat-thuoc">📦Phát Thuốc</button>
+                    <button class="btn btn-blue" id="btn-ve-nha">🏥Về Trạm Sạc</button>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="status-header">
+                    <div class="status-info">
+                        <h2 class="section-title">Trạng Thái</h2>
+                        <p><span class="text-green" id="hien-thi-trang-thai">Sẵn sàng</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- <div id="lidar-map-container">
+                <div class="axis-x"></div>
+                <div class="axis-y"></div>        
+                <div id="axis-labels"></div>
+                <div id="robot-marker"></div>
+            </div> -->
+
+            <section class="section">
+                <div class="task-list-section">
+               <div class="history-header">
+               <h2 class="text-blue">Danh Sách Công Việc</h2>
+             <button id="btn-clear-history" class="btn-clear">
+               <i class="fas fa-trash-alt"></i> Xóa Lịch Sử
+             </button>
+           </div>
+    
+    <div class="history-container">
+        <ul id="action-history-list">
+            <li class="history-empty">Chưa có thao tác nào...</li>
+        </ul>
+    </div>
+</div>
+            </section>
+
+            <footer class="footer-nav">
+                <button class="nav-btn" id="btn-tien">Tiến 50cm</button>
+                <button class="nav-btn" id="btn-lui">Lùi 50cm</button>
+                <button class="nav-btn" id="btn-home">🏠Home</button>
+            </footer>
+        </div>
+
+        <div id="activity-auto" class="activity hidden">
+            <div class="auto-content">
+                <div class="auto-message-box">
+                    <h1 class="auto-title">🤖<br>Robot đang ở chế độ tự động,<br>xin vui lòng nhường đường! <br> Cảm ơn quý bệnh nhân và y bác sĩ!</h1>
+                </div>
+            </div>
+
+            <footer class="footer-nav single-btn-footer">
+                <button class="nav-btn" id="btn-home-auto">🏠Home</button>
+            </footer>
+        </div>
+
+        <div id="toast" class="toast">Nội dung thông báo</div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    
+    <script src="script.js"></script>
+</div>
+</body>
+</html>
+
+
+
+
+<script>
+    function triggerRobotApp() {
+        // Gọi thẳng đến localhost vì Firefox và Server Node.js nằm trên cùng 1 con Pi 5
+        fetch('http://localhost:3000/open-app', {
+            method: 'POST'
+        })
+        .then(response => {
+            if(response.ok) {
+                console.log("Đã gửi lệnh kích hoạt!");
+                // Bạn có thể đổi alert thành một hiệu ứng UI nào đó trên dashboard cho đẹp hơn
+                alert("Đã gửi lệnh kích hoạt app!"); 
+            } else {
+                alert("Có lỗi xảy ra từ phía Server.");
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi:', error);
+            alert("Thiết bị này không phải RasPi 5 đã cài app Nhận Diện!");
+        });
+    }
+</script>
