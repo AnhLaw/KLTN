@@ -104,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setDiChuyenFirebase(moveMsg);
     }
 
-
     // 3. Hàm ghi nhận thao tác mới (Bản nâng cấp có cả NGÀY + GIỜ)
     function logAction(tenThaoTac) {
         // Lấy ngày và giờ hiện tại
@@ -126,14 +125,56 @@ document.addEventListener('DOMContentLoaded', () => {
         historyRef.push(newLog);
     }
 
+
+    function sendRobotGoal(x, y, yaw) {
+    // Tạo đối tượng dữ liệu
+        const goalData = {
+             timestamp: Date.now(),
+             x: x,
+             y: y,
+             yaw: yaw,
+             timeString: new Date().toLocaleString('vi-VN') // Thêm dòng này để dễ đọc trực tiếp trên Firebase
+        };
+
+    // Đẩy dữ liệu lên Firebase
+    // Sử dụng set() nếu bạn chỉ muốn lưu vị trí đích hiện tại (Robot chỉ đi đến 1 điểm 1 lúc)
+    // Hoặc push() nếu bạn muốn lưu lại lịch sử các điểm đích đã từng gửi
+        const goalRef = firebase.database().ref('robot_goal_pose');
+    
+        goalRef.set(goalData)
+            .then(() => console.log(`Đã gửi tọa độ: x=${x}, y=${y}`))
+            .catch((error) => console.error("Lỗi gửi tọa độ:", error));
+    }
+
+    function sendRobotTwist(vx, w) {
+    // vx: vận tốc tiến/lùi (m/s)
+    // w: vận tốc quay (rad/s)
+    
+        const twistData = {
+            vx: vx,
+            w: w,
+        };
+
+    // Đẩy lên Firebase node 'robot_twist'
+    // Thường với lệnh điều khiển tốc độ, chúng ta dùng set() để Robot 
+    // luôn nhận lệnh mới nhất thay vì lưu lại lịch sử dồn ứ.
+        const twistRef = firebase.database().ref('robot_twist');
+
+        twistRef.set(twistData)
+            .catch((error) => {
+                console.error("Lỗi khi gửi lệnh điều khiển:", error);
+            });
+    }
+
+
     function listenToHistory() {
         const historyList = document.getElementById('action-history-list');
         if (!historyList) return;
 
         const historyRef = firebase.database().ref('Robot/History');
 
-        // Lắng nghe sự thay đổi dữ liệu (Chỉ lấy 50 dòng mới nhất)
-        historyRef.limitToLast(50).on('value', (snapshot) => {
+        // Lắng nghe sự thay đổi dữ liệu
+        historyRef.limitToLast(100).on('value', (snapshot) => {
             // Xóa sạch danh sách cũ trên màn hình để vẽ lại
             historyList.innerHTML = '';
 
@@ -194,7 +235,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setCheDoFirebase('Auto');
         setTrangThaiFirebase("Chế độ Tự động");
-        setDiChuyenFirebase("Dừng"); // Xóa lệnh di chuyển nếu có
+        sendRobotGoal(1.21, 1.505, 0.061);
+        setTimeout(() => {
+        sendRobotGoal(0.171, 4.068, 1.54);
+    }, 20000);
+        setTimeout(() => {
+        sendRobotGoal(-1.612, 1.008, 3.983);
+    }, 40000);
+        setTimeout(() => {
+        sendRobotGoal(0.02, -0.053, 1.874);
+    }, 60000);
     });
 
     document.getElementById('btn-chatbot') ?.addEventListener('click', () => {
@@ -206,22 +256,35 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-nhan-thuoc') ?.addEventListener('click', () => {
         handleTaskClick("Đang đi nhận thuốc", "Robot bắt đầu đi nhận thuốc...");
         logAction('Nhận Thuốc');
+        sendRobotGoal(0.5, 2.1, 0.77);
     });
     document.getElementById('btn-phat-thuoc') ?.addEventListener('click', () => {
         handleTaskClick("Đang đi phát thuốc", "Robot bắt đầu đi phát thuốc...");
         logAction('Phát Thuốc');
+        sendRobotGoal(-1.951, 1.2221, 0.082);
     });
     document.getElementById('btn-ve-nha') ?.addEventListener('click', () => {
         handleTaskClick("Đang về trạm sạc", "Robot quay về trạm sạc...");
         logAction('Về trạm sạc');
+        sendRobotGoal(0.02, -0.053, 1.874);
     });
     document.getElementById('btn-tien') ?.addEventListener('click', () => {
         handleMoveClick("Đang tiến", "Robot đang tiến 50cm!");
         logAction('Tiến 50cm');
+        sendRobotTwist(0.2, 0.0);
+        setTimeout(() => {
+        sendRobotTwist(0.0, 0.0);
+        console.log("Đã dừng Robot sau 3s");
+    }, 3000);
     });
     document.getElementById('btn-lui') ?.addEventListener('click', () => {
         handleMoveClick("Đang lùi", "Robot đang lùi 50cm!");
         logAction('Lùi 50cm');
+        sendRobotTwist(-0.2, 0.0);
+        setTimeout(() => {
+        sendRobotTwist(0.0, 0.0);
+        console.log("Đã dừng Robot sau 3s");
+    }, 3000);
     });
     document.getElementById('btn-home') ?.addEventListener('click', () => {
         showToast("Đã trở về màn hình chính!");
@@ -229,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             activityControl.classList.add('hidden');
             activityHome.classList.remove('hidden');
         }
+        sendRobotTwist(0.0, 0.0);
         setCheDoFirebase('Home');
         setDiChuyenFirebase("Dừng");
         setTrangThaiFirebase("Sẵn sàng");
